@@ -3,6 +3,6 @@
 - try to minimize **cache work,page faults and context switches**
 
 
-#How to use
+# How to use
 - Compile with Linux C compiler like Gcc
 - ./program l1/l2/l3/ram 

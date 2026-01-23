@@ -103,6 +103,12 @@ int main(int argc,char* argv[]){
         "l2 latency (in cycles) : %f\n"
         "l3 latency (in cycles) : %f\n"
         "ram latency (in cycles) : %f\n",l1_latency,l2_latency,l3_latency,ram_latency);
+
+
+    free(l1_array);
+    free(l2_array);
+    free(l3_array);
+    free(ram_array);
 }
 
 

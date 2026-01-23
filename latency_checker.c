@@ -16,7 +16,7 @@
 
 
 #define NUMBER_OF_CORES 16
-#define ITERATIONS_NUMBER 10000000
+#define ITERATIONS_NUMBER 100000000
 
 
 static inline uint64_t get_current_tsc(){
@@ -48,14 +48,9 @@ void shuffle_indexes(uint32_t* arr,size_t array_size){
 
 
 
-double get_ram_latency(){
-    size_t full_malloc_size = RAM_CHECK_ARRAY_SIZE * sizeof(uint32_t);
-    uint32_t* arr = malloc(full_malloc_size);
-    if(arr == NULL){
-        printf("failed to allocate %d bytes\n",RAM_CHECK_ARRAY_SIZE);
-        return 0;
-    }
-    shuffle_indexes(arr,RAM_CHECK_ARRAY_SIZE);
+double get_latency(uint32_t* arr,size_t size){
+
+    shuffle_indexes(arr,size);
 
     uint64_t start,end;
 
@@ -65,7 +60,6 @@ double get_ram_latency(){
         array_index = arr[array_index];
     }
     end = get_current_tsc();
-    free(arr);
     return (double)(end - start) / ITERATIONS_NUMBER;
 }
 
@@ -74,49 +68,9 @@ double get_ram_latency(){
 
 
 
-
-double get_cache_latency(int cache_number){
-
-    size_t size_of_array;
-    switch (cache_number){
-        case 1:
-            size_of_array = L1_CHECK_ARRAY_SIZE;
-            break;    
-        case 2:
-            size_of_array = L2_CHECK_ARRAY_SIZE;
-            break;
-        case 3:
-            size_of_array = L3_CHECK_ARRAY_SIZE;
-            break;
-        default:
-            size_of_array = -1;
-            break;
-    }
-    if(size_of_array == -1)
-        return -1.0;
-
-
-    size_t full_malloc_size = size_of_array * sizeof(uint32_t);
-    uint32_t* arr = malloc(full_malloc_size);
-    shuffle_indexes(arr,size_of_array);
-    volatile int tmp;
-    uint64_t start,end;
-    start = get_current_tsc();
-    for(int i = 0; i < size_of_array;i+=65){
-        tmp = arr[tmp];
-    }
-    end = get_current_tsc();
-    free(arr);
-    return (double)(end - start) / (size_of_array/65);
-}
-
-
 int main(int argc,char* argv[]){
 
-    if(argc != 2){
-        printf("usage : ./program l1/l2/l3/ram\n");
-        return 0;
-    } 
+
 
 
     pin_to_core(rand() % NUMBER_OF_CORES-1); //cpu affinity
@@ -127,13 +81,28 @@ int main(int argc,char* argv[]){
 
 
 
-    double latency_in_cycles;
-    if(strcmp(argv[1],"l1") == 0) latency_in_cycles = get_cache_latency(1); 
-    else if(strcmp(argv[1],"l2") == 0) latency_in_cycles = get_cache_latency(2);
-    else if(strcmp(argv[1],"l3") == 0) latency_in_cycles = get_cache_latency(3);
-    else if(strcmp(argv[1],"ram") == 0) latency_in_cycles = get_ram_latency();
 
-    printf("latency (cycles per access): %f\n", latency_in_cycles);
+    printf("calculating...\n");
+    uint32_t* l1_array = malloc(sizeof(uint32_t) * L1_CHECK_ARRAY_SIZE);
+    double l1_latency = get_latency(l1_array,L1_CHECK_ARRAY_SIZE);
+
+
+
+    uint32_t* l2_array = malloc(sizeof(uint32_t) * L2_CHECK_ARRAY_SIZE);
+    double l2_latency = get_latency(l2_array,L2_CHECK_ARRAY_SIZE);
+
+
+    uint32_t* l3_array = malloc(sizeof(uint32_t) * L3_CHECK_ARRAY_SIZE);
+    double l3_latency = get_latency(l3_array,L3_CHECK_ARRAY_SIZE);
+
+
+    uint32_t* ram_array = malloc(sizeof(uint32_t) * RAM_CHECK_ARRAY_SIZE);
+    double ram_latency = get_latency(ram_array,RAM_CHECK_ARRAY_SIZE);
+
+    printf("l1 latency (in cycles) : %f\n"
+        "l2 latency (in cycles) : %f\n"
+        "l3 latency (in cycles) : %f\n"
+        "ram latency (in cycles) : %f\n",l1_latency,l2_latency,l3_latency,ram_latency);
 }
 
 

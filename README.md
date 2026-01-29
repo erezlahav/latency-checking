@@ -26,8 +26,4 @@ It tries to minimize the effects of **cache prefetching, page faults, and contex
 gcc -pthread -o latency_checker latency_checker.c
 ```
 
-## Exemples
-- ./latency_checker l1   # Measure L1 cache latency
-- ./latency_checker l2   # Measure L2 cache latency
-- ./latency_checker l3   # Measure L3 cache latency
-- ./latency_checker ram  # Measure RAM latency
+
